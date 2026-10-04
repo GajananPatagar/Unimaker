@@ -117,13 +117,11 @@
             const chain = document.getElementById('chain').value;
             
             if (isRecording) {
-                // Sequence Recorder Mode
                 const timestamp = Date.now() - recordStartTime;
                 autoPlay.push(`${timestamp} ${chain} ${x} ${y}`);
                 padElement.style.background = "#fff";
                 setTimeout(() => padElement.style.background = "", 100);
             } else {
-                // Audio Assignment Mode
                 if (!audioBuffer) return alert("Load an audio track first!");
                 const start = parseFloat(document.getElementById('startTime').value);
                 const end = parseFloat(document.getElementById('endTime').value);
@@ -135,7 +133,7 @@
                     const hex = document.getElementById('hexVal').value;
                     colorData = { 
                         type: 'rgb', 
-                        r: Math.floor(parseInt(hex.substr(1,2), 16) / 2), // Scale 0-255 to 0-127 for SysEx
+                        r: Math.floor(parseInt(hex.substr(1,2), 16) / 2), 
                         g: Math.floor(parseInt(hex.substr(3,2), 16) / 2),
                         b: Math.floor(parseInt(hex.substr(5,2), 16) / 2)
                     };
@@ -157,7 +155,6 @@
             }
         }
 
-        // Custom Binary Encoder for 16-bit PCM RIFF Header
         function encodeRIFF(buffer) {
             let numChannels = buffer.numberOfChannels;
             let result = numChannels === 2 ? interleave(buffer.getChannelData(0), buffer.getChannelData(1)) : buffer.getChannelData(0);
@@ -183,9 +180,7 @@
             const zip = new JSZip();
             let keySound = "";
             
-            // Generate Metadata
             zip.file("info", `title=Unimaker Pro\nproducer=Gajanan Patagar\nchain=8`);
-            // Generate AutoPlay Sequence
             zip.file("autoPlay", autoPlay.join('\n')); 
             
             const soundsFolder = zip.folder("sounds"); const keyLedFolder = zip.folder("keyLED");
@@ -196,13 +191,9 @@
                 
                 let ledData = "";
                 if (s.colorData.type === 'velocity') {
-                    // Standard MIDI Note-On Animation Protocol
                     ledData = `d 0\no ${s.animMode} 0 ${s.colorData.val}\n`;
                 } else {
-                    // 24-bit RGB SysEx Translation
-                    // Launchpad Grid Index calculation (y*10 + x coordinate system)
                     const ledIndex = (s.y * 10) + parseInt(s.x);
-                    // F0 00 20 29 02 0C 03 <LED_Index> <Red> <Green> <Blue> F7 translated to decimal for plaintext mapping
                     ledData = `d 0\nx 240 0 32 41 2 12 3 ${ledIndex} ${s.colorData.r} ${s.colorData.g} ${s.colorData.b} 247\n`;
                 }
                 keyLedFolder.file(`${s.chain} ${s.x} ${s.y} 1`, ledData); 
