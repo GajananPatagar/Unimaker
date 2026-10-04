@@ -3,29 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unimaker Creator Pro - Master Edition</title>
+    <title>Unimaker DAW - Pro Edition</title>
     <script src="jszip.min.js"></script>
     <style>
-        :root { --bg: #0a0a0c; --panel: #15151a; --accent: #ff3366; --text: #e0e0e0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); padding: 10px; margin: 0; font-size: 14px;}
-        .header { text-align: center; font-size: 22px; font-weight: bold; margin-bottom: 15px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
-        .container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 0 auto; }
-        .panel { background: var(--panel); padding: 15px; border-radius: 10px; border: 1px solid #2a2a35; }
-        .panel h3 { margin-top: 0; color: #fff; border-bottom: 1px solid #333; padding-bottom: 8px; font-size: 14px; text-transform: uppercase; }
-        input, select, button { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; background: #202028; color: #fff; border: 1px solid #3d3d4a; border-radius: 6px; }
-        input:focus, select:focus { border-color: var(--accent); outline: none; }
-        button { background: #3d3d4a; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.2s; }
-        button:hover { background: #4e4e5e; }
-        .btn-primary { background: var(--accent); color: #fff; margin-top: 10px; padding: 15px;}
-        .btn-primary:hover { background: #ff1a53; }
-        .btn-auto { background: #00d2d3; color: #000; margin-top: 10px; }
-        .flex-row { display: flex; gap: 8px; }
+        :root { --bg: #0d0d12; --panel: #181822; --accent: #00d2d3; --text: #f1f2f6; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 12px; margin: 0; font-size: 14px;}
+        .header { text-align: center; font-size: 24px; font-weight: 900; margin-bottom: 15px; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; }
+        .container { display: flex; flex-direction: column; gap: 12px; max-width: 650px; margin: 0 auto; }
+        .panel { background: var(--panel); padding: 18px; border-radius: 12px; border: 1px solid #2f3542; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .panel h3 { margin-top: 0; color: #fff; border-bottom: 2px solid #2f3542; padding-bottom: 8px; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        input, select, button { width: 100%; padding: 12px; margin-top: 6px; box-sizing: border-box; background: #222230; color: #fff; border: 1px solid #4b4b5e; border-radius: 6px; font-family: inherit; font-size: 14px;}
+        input:focus, select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 5px var(--accent); }
+        button { background: #4b4b5e; font-weight: 800; cursor: pointer; border: none; text-transform: uppercase; transition: 0.2s; letter-spacing: 1px;}
+        button:hover { background: #5a5a72; }
+        .btn-primary { background: var(--accent); color: #000; margin-top: 10px; padding: 16px; font-size: 16px;}
+        .btn-primary:hover { background: #00e5e6; box-shadow: 0 0 15px var(--accent); }
+        .btn-auto { background: #ff4757; color: #fff; margin-top: 10px; }
+        .btn-auto:hover { background: #ff6b81; box-shadow: 0 0 15px #ff4757; }
+        .flex-row { display: flex; gap: 10px; }
         .flex-row > div { flex: 1; }
-        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; aspect-ratio: 1; margin: 10px auto; padding: 8px; background: #000; border-radius: 6px; border: 1px solid #222; }
-        .pad { background: #1a1a24; border-radius: 4px; aspect-ratio: 1; border: 1px solid #2a2a35; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.1s; }
-        .pad.assigned { background: var(--accent); box-shadow: 0 0 10px rgba(255, 51, 102, 0.4); border-color: #fff; }
+        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; aspect-ratio: 1; margin: 15px auto; padding: 10px; background: #000; border-radius: 8px; border: 2px solid #2f3542; }
+        .pad { background: #1e1e2d; border-radius: 4px; aspect-ratio: 1; border: 1px solid #2f3542; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: 0.1s; }
+        .pad.assigned { background: var(--accent); box-shadow: 0 0 12px var(--accent); border-color: #fff; color: #000; }
         .pad:active { transform: scale(0.85); }
-        .status-bar { text-align: center; margin-top: 10px; font-size: 13px; color: #00d2d3; font-weight: bold; }
+        .status-bar { text-align: center; margin-top: 15px; font-size: 14px; color: var(--accent); font-weight: bold; background: #000; padding: 10px; border-radius: 6px;}
     </style>
 </head>
 <body>
@@ -51,15 +52,16 @@
 
         <!-- Lightshow Engine Panel -->
         <div class="panel">
-            <h3>2. Lightshow Macro</h3>
+            <h3>2. Lightshow Generator Macros</h3>
             <div class="flex-row">
-                <div><label>MIDI Color (0-127)</label><input type="number" id="colorVal" value="45" min="0" max="127"></div>
+                <div><label>Launchpad Color (0-127)</label><input type="number" id="colorVal" value="45" min="0" max="127"></div>
                 <div>
-                    <label>Effect Pattern</label>
+                    <label>Auto-Generate Theme</label>
                     <select id="lightTheme">
                         <option value="single">Single Pad</option>
                         <option value="cross">Cross Blast</option>
                         <option value="ripple">Expanding Ripple</option>
+                        <option value="rainbow">Rainbow Sparkle</option>
                     </select>
                 </div>
             </div>
@@ -76,11 +78,11 @@
                     </select>
                 </div>
             </div>
-            <button class="btn-auto" onclick="autoSliceBeats()">⚡ AUTO-CUT & MAP BEATS</button>
+            <button class="btn-auto" onclick="autoSliceBeats()">⚡ AUTO-CUT & MAP 8 BEATS</button>
             <div class="grid" id="launchpad"></div>
         </div>
 
-        <button class="btn-primary" onclick="exportPack()">💾 Compile UniPack</button>
+        <button class="btn-primary" onclick="exportPack()">💾 Compile Professional UniPack</button>
         <div id="status" class="status-bar">Awaiting Audio...</div>
     </div>
 
@@ -101,10 +103,10 @@
         }
 
         document.getElementById('audioFile').addEventListener('change', async (e) => {
-            document.getElementById('status').innerText = "Analyzing Frequencies...";
+            document.getElementById('status').innerText = "Decoding High-Res Audio...";
             const file = e.target.files[0];
             masterBuffer = await audioContext.decodeAudioData(await file.arrayBuffer());
-            document.getElementById('status').innerText = "Audio Loaded. Ready for slicing.";
+            document.getElementById('status').innerText = "Audio Ready. Set MS cuts and map to grid.";
         });
 
         function updateGridVisuals() {
@@ -119,23 +121,16 @@
         // --- STUDIO EQ PROCESSING ENGINE ---
         async function applyEQ(buffer, filterType) {
             if (filterType === 'none') return buffer;
-            
             const offlineCtx = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
             const source = offlineCtx.createBufferSource();
             source.buffer = buffer;
 
             const filter = offlineCtx.createBiquadFilter();
-            if (filterType === 'bass') {
-                filter.type = 'lowpass'; filter.frequency.value = 150; // Keep only sub/kicks
-            } else if (filterType === 'vocal') {
-                filter.type = 'bandpass'; filter.frequency.value = 1200; filter.Q.value = 0.8; // Target mid-range vocals
-            } else if (filterType === 'drums') {
-                filter.type = 'highpass'; filter.frequency.value = 2500; // Target hi-hats/snares
-            }
+            if (filterType === 'bass') { filter.type = 'lowpass'; filter.frequency.value = 150; } 
+            else if (filterType === 'vocal') { filter.type = 'bandpass'; filter.frequency.value = 1000; filter.Q.value = 1.0; } 
+            else if (filterType === 'drums') { filter.type = 'highpass'; filter.frequency.value = 2000; }
 
-            source.connect(filter);
-            filter.connect(offlineCtx.destination);
-            source.start(0);
+            source.connect(filter); filter.connect(offlineCtx.destination); source.start(0);
             return await offlineCtx.startRendering();
         }
 
@@ -143,12 +138,21 @@
             const startSec = startMs / 1000; const endSec = endMs / 1000;
             const sampleRate = masterBuffer.sampleRate;
             const length = Math.floor((endSec - startSec) * sampleRate);
-            
             const sliceBuffer = audioContext.createBuffer(masterBuffer.numberOfChannels, length, sampleRate);
             for (let i = 0; i < masterBuffer.numberOfChannels; i++) {
                 sliceBuffer.copyToChannel(masterBuffer.getChannelData(i).subarray(Math.floor(startSec * sampleRate), Math.floor(endSec * sampleRate)), i);
             }
             return await applyEQ(sliceBuffer, filterType);
+        }
+
+        function commitToMemory(chain, x, y, durationMs, buffer) {
+            sounds.push({
+                chain, x, y, durationMs, 
+                baseColor: document.getElementById('colorVal').value, 
+                theme: document.getElementById('lightTheme').value, 
+                rawBuffer: buffer, wavBlob: encodeRIFF(buffer), 
+                filename: `${sounds.length.toString().padStart(3, '0')}.wav`
+            });
         }
 
         async function processAndAssign(padElement, x, y) {
@@ -167,24 +171,12 @@
             if (durationMs <= 0) return alert("Invalid MS cut.");
 
             document.getElementById('status').innerText = "Processing EQ Stem...";
-            
             const filterType = document.getElementById('eqFilter').value;
             const finalBuffer = await extractSlice(startMs, endMs, filterType);
             
             commitToMemory(chain, x, y, durationMs, finalBuffer);
             padElement.classList.add('assigned'); padElement.innerText = "●";
             document.getElementById('status').innerText = `Stem mapped to Pad [${x},${y}]`;
-        }
-
-        function commitToMemory(chain, x, y, durationMs, buffer) {
-            sounds.push({
-                chain, x, y, durationMs, 
-                baseColor: document.getElementById('colorVal').value, 
-                theme: document.getElementById('lightTheme').value, 
-                rawBuffer: buffer, 
-                wavBlob: encodeRIFF(buffer), 
-                filename: `${sounds.length.toString().padStart(3, '0')}.wav`
-            });
         }
 
         // --- TRANSIENT PEAK DETECTOR (AUTO-CUT) ---
@@ -195,70 +187,79 @@
             const data = masterBuffer.getChannelData(0);
             const sampleRate = masterBuffer.sampleRate;
             const beats = [];
+            const minGap = sampleRate * 0.25; // Min 250ms gap between hits
+            const threshold = 0.5; 
+            let lastBeat = -minGap;
             
-            // Math: Find peaks above average energy. 
-            // Min gap between kicks = 250ms (prevents double triggering on same beat)
-            const minGap = sampleRate * 0.25; 
-            const threshold = 0.6; // High threshold for distinct transients
-            
-            let lastBeat = 0;
-            // Only scan first 15 seconds to avoid freezing UI
-            const scanLimit = Math.min(data.length, sampleRate * 15); 
-            
+            const scanLimit = Math.min(data.length, sampleRate * 30); 
             for(let i = 0; i < scanLimit; i++) {
                 if (Math.abs(data[i]) > threshold && (i - lastBeat) > minGap) {
-                    beats.push(Math.floor((i / sampleRate) * 1000)); // Convert to MS
+                    beats.push(Math.floor((i / sampleRate) * 1000));
                     lastBeat = i;
-                    if(beats.length >= 8) break; // Auto-map up to 8 beats
+                    if(beats.length >= 8) break; 
                 }
             }
 
-            if(beats.length === 0) return alert("No clear beats found. Try lowering threshold in code.");
+            if(beats.length === 0) return alert("No beats detected. Ensure track has heavy drums.");
 
             const chain = document.getElementById('chain').value;
             const filterType = document.getElementById('eqFilter').value;
             
-            // Map the detected beats horizontally across the top row (Y=1, X=1 to 8)
+            // Map beats horizontally to top row (y=1, x=1 to 8)
             for(let i=0; i < beats.length; i++) {
                 const startMs = beats[i];
-                const endMs = startMs + 300; // Auto-cut length: 300ms
-                
+                const endMs = startMs + 400; // 400ms sharp cut
                 const finalBuffer = await extractSlice(startMs, endMs, filterType);
-                commitToMemory(chain, i+1, 1, 300, finalBuffer);
-                
-                // Update UI Visuals
+                commitToMemory(chain, i+1, 1, 400, finalBuffer);
                 const pad = document.querySelector(`.pad[data-x='${i+1}'][data-y='1']`);
                 if(pad) { pad.classList.add('assigned'); pad.innerText = "●"; }
             }
-            document.getElementById('status').innerText = `Auto-Sliced ${beats.length} beats to Top Row!`;
+            document.getElementById('status').innerText = `⚡ Auto-Sliced ${beats.length} beats perfectly horizontally!`;
         }
 
-        // --- EXPORT & LIGHTSHOW LOGIC ---
-        function generateLightshow(theme, startX, startY, color, duration) {
+        // --- NATIVE UNIPAD LIGHTSHOW ENGINE ---
+        function generateLightshow(theme, uiColX, uiRowY, color, duration) {
             let ledStr = `d 0\n`; let offStr = `d ${duration}\n`;
-            const getNote = (nx, ny) => (ny * 10) + nx;
             
-            if (theme === "single") {
-                const note = getNote(startX, startY);
-                ledStr += `o 144 ${note} ${color}\n`; offStr += `o 128 ${note} 0\n`;
-            } else if (theme === "cross") {
-                for(let i=1; i<=8; i++) {
-                    ledStr += `o 144 ${getNote(i, startY)} ${color}\no 144 ${getNote(startX, i)} ${color}\n`;
-                    offStr += `o 128 ${getNote(i, startY)} 0\no 128 ${getNote(startX, i)} 0\n`;
+            // Native format: o <row> <col> a <velocity>
+            const turnOn = (r, c, colr) => {
+                if(r>=1 && r<=8 && c>=1 && c<=8) {
+                    ledStr += `o ${r} ${c} a ${colr}\n`;
+                    offStr += `f ${r} ${c}\n`;
                 }
-            } else if (theme === "ripple") {
+            };
+
+            if (theme === "single") { turnOn(uiRowY, uiColX, color); } 
+            else if (theme === "cross") {
+                for(let i=1; i<=8; i++) { turnOn(uiRowY, i, color); turnOn(i, uiColX, color); }
+            } 
+            else if (theme === "ripple") {
                 let delay = 0;
-                for (let radius = 0; radius <= 4; radius++) {
+                for (let radius = 0; radius <= 8; radius++) {
                     ledStr += `d ${delay}\n`;
-                    for(let i=1; i<=8; i++) {
-                        for(let j=1; j<=8; j++) {
-                            if (Math.max(Math.abs(i - startX), Math.abs(j - startY)) === radius) {
-                                ledStr += `o 144 ${getNote(i, j)} ${color}\n`;
-                                offStr += `o 128 ${getNote(i, j)} 0\n`;
+                    for(let r=1; r<=8; r++) {
+                        for(let c=1; c<=8; c++) {
+                            if (Math.max(Math.abs(r - uiRowY), Math.abs(c - uiColX)) === radius) {
+                                ledStr += `o ${r} ${c} a ${color}\n`; offStr += `f ${r} ${c}\n`;
                             }
                         }
                     }
-                    delay += 50; 
+                    delay += 40;
+                }
+            }
+            else if (theme === "rainbow") {
+                let delay = 0;
+                for(let step=0; step<8; step++) {
+                    ledStr += `d ${delay}\n`;
+                    for(let r=1; r<=8; r++) {
+                        for(let c=1; c<=8; c++) {
+                            if (Math.random() > 0.7) {
+                                ledStr += `o ${r} ${c} a ${Math.floor(Math.random() * 127)}\n`;
+                                offStr += `f ${r} ${c}\n`;
+                            }
+                        }
+                    }
+                    delay += 60;
                 }
             }
             return ledStr + offStr;
@@ -267,9 +268,7 @@
         function encodeRIFF(buffer) {
             let numChannels = buffer.numberOfChannels;
             let result = numChannels === 2 ? interleave(buffer.getChannelData(0), buffer.getChannelData(1)) : buffer.getChannelData(0);
-            let dataLength = result.length * 2;
-            let bufferData = new ArrayBuffer(44 + dataLength);
-            let view = new DataView(bufferData);
+            let dataLength = result.length * 2; let bufferData = new ArrayBuffer(44 + dataLength); let view = new DataView(bufferData);
             let writeString = (v, o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
             writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + dataLength, true); writeString(view, 8, 'WAVE'); writeString(view, 12, 'fmt ');
             view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numChannels, true);
@@ -296,11 +295,15 @@
 
             sounds.forEach(s => {
                 soundsFolder.file(s.filename, s.wavBlob);
-                let unipadX = s.y; let unipadY = s.x; // Axis correction
-                keySound += `${s.chain} ${unipadX} ${unipadY} ${s.filename}\n`;
                 
-                let ledData = generateLightshow(s.theme, parseInt(unipadX), parseInt(unipadY), s.baseColor, s.durationMs);
-                keyLedFolder.file(`${s.chain} ${unipadX} ${unipadY} 1`, ledData); 
+                // CRITICAL FIX: Explicitly mapping UI Row/Col to UniPad Row/Col orientation
+                let unipadRow = s.y; 
+                let unipadCol = s.x; 
+
+                keySound += `${s.chain} ${unipadRow} ${unipadCol} ${s.filename}\n`;
+                
+                let ledData = generateLightshow(s.theme, s.x, s.y, s.baseColor, s.durationMs);
+                keyLedFolder.file(`${s.chain} ${unipadRow} ${unipadCol} 1`, ledData); 
             });
 
             zip.file("keySound", keySound);
