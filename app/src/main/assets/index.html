@@ -3,64 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unimaker Creator Pro - Studio Edition</title>
+    <title>Unimaker Creator Pro - Master Edition</title>
     <script src="jszip.min.js"></script>
     <style>
-        :root { --bg: #0f0f13; --panel: #1a1a20; --accent: #00e5ff; --text: #e0e0e0; --danger: #ff4757; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); padding: 10px; margin: 0; }
-        .header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 20px; color: var(--accent); letter-spacing: 2px; }
-        .container { display: flex; flex-direction: column; gap: 15px; max-width: 600px; margin: 0 auto; }
-        .panel { background: var(--panel); padding: 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); border: 1px solid #2a2a35; }
-        .panel h3 { margin-top: 0; color: #fff; border-bottom: 2px solid #333; padding-bottom: 10px; font-size: 16px; text-transform: uppercase; }
-        input, select, button { width: 100%; padding: 12px; margin-top: 8px; box-sizing: border-box; background: #25252d; color: #fff; border: 1px solid #3d3d4a; border-radius: 6px; font-size: 14px; transition: 0.2s; }
+        :root { --bg: #0a0a0c; --panel: #15151a; --accent: #ff3366; --text: #e0e0e0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); padding: 10px; margin: 0; font-size: 14px;}
+        .header { text-align: center; font-size: 22px; font-weight: bold; margin-bottom: 15px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
+        .container { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 0 auto; }
+        .panel { background: var(--panel); padding: 15px; border-radius: 10px; border: 1px solid #2a2a35; }
+        .panel h3 { margin-top: 0; color: #fff; border-bottom: 1px solid #333; padding-bottom: 8px; font-size: 14px; text-transform: uppercase; }
+        input, select, button { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; background: #202028; color: #fff; border: 1px solid #3d3d4a; border-radius: 6px; }
         input:focus, select:focus { border-color: var(--accent); outline: none; }
-        button { background: #3d3d4a; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; }
+        button { background: #3d3d4a; font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.2s; }
         button:hover { background: #4e4e5e; }
-        .btn-primary { background: var(--accent); color: #000; margin-top: 15px; }
-        .btn-primary:hover { background: #00c3d9; }
-        .btn-preview { background: #ffbe76; color: #000; }
-        .btn-preview:hover { background: #e0a869; }
-        .flex-row { display: flex; gap: 10px; }
+        .btn-primary { background: var(--accent); color: #fff; margin-top: 10px; padding: 15px;}
+        .btn-primary:hover { background: #ff1a53; }
+        .btn-auto { background: #00d2d3; color: #000; margin-top: 10px; }
+        .flex-row { display: flex; gap: 8px; }
         .flex-row > div { flex: 1; }
-        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; aspect-ratio: 1; margin: 15px auto; padding: 10px; background: #111; border-radius: 8px; border: 1px solid #333; }
-        .pad { background: #2d2d35; border-radius: 4px; aspect-ratio: 1; border: 1px solid #1a1a20; cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .pad.assigned { background: var(--accent); box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); border-color: #fff; }
+        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; aspect-ratio: 1; margin: 10px auto; padding: 8px; background: #000; border-radius: 6px; border: 1px solid #222; }
+        .pad { background: #1a1a24; border-radius: 4px; aspect-ratio: 1; border: 1px solid #2a2a35; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.1s; }
+        .pad.assigned { background: var(--accent); box-shadow: 0 0 10px rgba(255, 51, 102, 0.4); border-color: #fff; }
         .pad:active { transform: scale(0.85); }
-        .status-bar { text-align: center; margin-top: 10px; font-size: 14px; color: #a4b0be; font-weight: bold; }
+        .status-bar { text-align: center; margin-top: 10px; font-size: 13px; color: #00d2d3; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="header">UNIMAKER PRO</div>
+    <div class="header">UNIMAKER PRO // DAW</div>
     
     <div class="container">
-        <!-- Audio Engine Panel -->
+        <!-- Audio & Stem Isolation Panel -->
         <div class="panel">
-            <h3>1. Audio Engine</h3>
-            <label>Master Track (.wav/.mp3)</label>
+            <h3>1. Audio & Stem Isolation</h3>
             <input type="file" id="audioFile" accept="audio/*">
-            
-            <div class="flex-row" style="margin-top: 15px;">
+            <label>Isolate Frequency (EQ Stems)</label>
+            <select id="eqFilter">
+                <option value="none">Original Audio (Full Range)</option>
+                <option value="bass">Isolate Kicks / Bass (Low-Pass)</option>
+                <option value="vocal">Isolate Vocals / Melodies (Band-Pass)</option>
+                <option value="drums">Isolate Hi-Hats / Snares (High-Pass)</option>
+            </select>
+            <div class="flex-row" style="margin-top: 10px;">
                 <div><label>Start (ms)</label><input type="number" id="startTime" value="0" step="10"></div>
-                <div><label>End (ms)</label><input type="number" id="endTime" value="1500" step="10"></div>
+                <div><label>End (ms)</label><input type="number" id="endTime" value="500" step="10"></div>
             </div>
-            <button class="btn-preview" onclick="playPreview()">▶ Preview Slice</button>
         </div>
 
         <!-- Lightshow Engine Panel -->
         <div class="panel">
-            <h3>2. Auto-Lightshow Generator</h3>
+            <h3>2. Lightshow Macro</h3>
             <div class="flex-row">
+                <div><label>MIDI Color (0-127)</label><input type="number" id="colorVal" value="45" min="0" max="127"></div>
                 <div>
-                    <label>Base Color (MIDI 0-127)</label>
-                    <input type="number" id="colorVal" value="45" min="0" max="127">
-                </div>
-                <div>
-                    <label>Pre-programmed Theme</label>
+                    <label>Effect Pattern</label>
                     <select id="lightTheme">
                         <option value="single">Single Pad</option>
                         <option value="cross">Cross Blast</option>
                         <option value="ripple">Expanding Ripple</option>
-                        <option value="rainbow">100+ Rainbow Sparkle</option>
                     </select>
                 </div>
             </div>
@@ -68,7 +67,7 @@
 
         <!-- Mapping Panel -->
         <div class="panel">
-            <h3>3. Grid Assignment</h3>
+            <h3>3. Grid & Auto-Slicer</h3>
             <div class="flex-row">
                 <div>
                     <label>Chain Layer</label>
@@ -77,34 +76,35 @@
                     </select>
                 </div>
             </div>
+            <button class="btn-auto" onclick="autoSliceBeats()">⚡ AUTO-CUT & MAP BEATS</button>
             <div class="grid" id="launchpad"></div>
         </div>
 
-        <button class="btn-primary" onclick="exportPack()">💾 Export Project to UniPack</button>
+        <button class="btn-primary" onclick="exportPack()">💾 Compile UniPack</button>
         <div id="status" class="status-bar">Awaiting Audio...</div>
     </div>
 
     <script>
         let sounds = []; 
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let audioBuffer = null;
+        let masterBuffer = null;
 
-        // Initialize UI Grid
+        // UI Grid Init
         const grid = document.getElementById('launchpad');
         for(let y = 1; y <= 8; y++) {
             for(let x = 1; x <= 8; x++) {
                 let btn = document.createElement('button');
                 btn.className = 'pad'; btn.dataset.x = x; btn.dataset.y = y;
-                btn.onclick = () => handlePadClick(btn, x, y);
+                btn.onclick = () => processAndAssign(btn, x, y);
                 grid.appendChild(btn);
             }
         }
 
         document.getElementById('audioFile').addEventListener('change', async (e) => {
-            document.getElementById('status').innerText = "Decoding High-Res Audio...";
+            document.getElementById('status').innerText = "Analyzing Frequencies...";
             const file = e.target.files[0];
-            audioBuffer = await audioContext.decodeAudioData(await file.arrayBuffer());
-            document.getElementById('status').innerText = "Audio Ready. Set MS cuts and map to grid.";
+            masterBuffer = await audioContext.decodeAudioData(await file.arrayBuffer());
+            document.getElementById('status').innerText = "Audio Loaded. Ready for slicing.";
         });
 
         function updateGridVisuals() {
@@ -116,23 +116,42 @@
             });
         }
 
-        async function playPreview() {
-            if (!audioBuffer) return alert("Load audio first!");
-            const startMs = parseFloat(document.getElementById('startTime').value);
-            const endMs = parseFloat(document.getElementById('endTime').value);
-            const startSec = startMs / 1000; const endSec = endMs / 1000;
-            if (endSec <= startSec) return alert("End MS must be greater than Start MS.");
+        // --- STUDIO EQ PROCESSING ENGINE ---
+        async function applyEQ(buffer, filterType) {
+            if (filterType === 'none') return buffer;
             
-            const sampleRate = audioBuffer.sampleRate;
-            const sliceBuffer = audioContext.createBuffer(audioBuffer.numberOfChannels, Math.floor((endSec - startSec) * sampleRate), sampleRate);
-            for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
-                sliceBuffer.copyToChannel(audioBuffer.getChannelData(i).subarray(Math.floor(startSec * sampleRate), Math.floor(endSec * sampleRate)), i);
+            const offlineCtx = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+            const source = offlineCtx.createBufferSource();
+            source.buffer = buffer;
+
+            const filter = offlineCtx.createBiquadFilter();
+            if (filterType === 'bass') {
+                filter.type = 'lowpass'; filter.frequency.value = 150; // Keep only sub/kicks
+            } else if (filterType === 'vocal') {
+                filter.type = 'bandpass'; filter.frequency.value = 1200; filter.Q.value = 0.8; // Target mid-range vocals
+            } else if (filterType === 'drums') {
+                filter.type = 'highpass'; filter.frequency.value = 2500; // Target hi-hats/snares
             }
-            const source = audioContext.createBufferSource();
-            source.buffer = sliceBuffer; source.connect(audioContext.destination); source.start(0);
+
+            source.connect(filter);
+            filter.connect(offlineCtx.destination);
+            source.start(0);
+            return await offlineCtx.startRendering();
         }
 
-        async function handlePadClick(padElement, x, y) {
+        async function extractSlice(startMs, endMs, filterType) {
+            const startSec = startMs / 1000; const endSec = endMs / 1000;
+            const sampleRate = masterBuffer.sampleRate;
+            const length = Math.floor((endSec - startSec) * sampleRate);
+            
+            const sliceBuffer = audioContext.createBuffer(masterBuffer.numberOfChannels, length, sampleRate);
+            for (let i = 0; i < masterBuffer.numberOfChannels; i++) {
+                sliceBuffer.copyToChannel(masterBuffer.getChannelData(i).subarray(Math.floor(startSec * sampleRate), Math.floor(endSec * sampleRate)), i);
+            }
+            return await applyEQ(sliceBuffer, filterType);
+        }
+
+        async function processAndAssign(padElement, x, y) {
             const chain = document.getElementById('chain').value;
             const existingSound = sounds.find(s => s.chain == chain && s.x == x && s.y == y);
             if (existingSound) {
@@ -141,57 +160,95 @@
                 return;
             }
 
-            if (!audioBuffer) return alert("Load an audio track first!");
+            if (!masterBuffer) return alert("Load audio first!");
             const startMs = parseFloat(document.getElementById('startTime').value);
             const endMs = parseFloat(document.getElementById('endTime').value);
-            const startSec = startMs / 1000; const endSec = endMs / 1000;
             const durationMs = endMs - startMs;
             if (durationMs <= 0) return alert("Invalid MS cut.");
 
-            const baseColor = document.getElementById('colorVal').value;
-            const theme = document.getElementById('lightTheme').value;
+            document.getElementById('status').innerText = "Processing EQ Stem...";
             
-            const sampleRate = audioBuffer.sampleRate;
-            const sliceBuffer = audioContext.createBuffer(audioBuffer.numberOfChannels, Math.floor((endSec - startSec) * sampleRate), sampleRate);
-            for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
-                const channelData = audioBuffer.getChannelData(i);
-                const sliceData = sliceBuffer.getChannelData(i);
-                for (let j = 0; j < sliceData.length; j++) sliceData[j] = channelData[Math.floor(startSec * sampleRate) + j];
-            }
+            const filterType = document.getElementById('eqFilter').value;
+            const finalBuffer = await extractSlice(startMs, endMs, filterType);
             
-            sounds.push({ 
-                chain, x, y, durationMs, baseColor, theme, 
-                rawBuffer: sliceBuffer, wavBlob: encodeRIFF(sliceBuffer), 
-                filename: `${sounds.length.toString().padStart(3, '0')}.wav` 
-            });
-            
+            commitToMemory(chain, x, y, durationMs, finalBuffer);
             padElement.classList.add('assigned'); padElement.innerText = "●";
-            document.getElementById('status').innerText = `Mapped Cut (${startMs}ms - ${endMs}ms) to Pad [${x},${y}]`;
+            document.getElementById('status').innerText = `Stem mapped to Pad [${x},${y}]`;
         }
 
-        function generateLightshow(theme, startX, startY, color, duration) {
-            let ledStr = "";
-            let offStr = `d ${duration}\n`; // Turn off after audio ends
+        function commitToMemory(chain, x, y, durationMs, buffer) {
+            sounds.push({
+                chain, x, y, durationMs, 
+                baseColor: document.getElementById('colorVal').value, 
+                theme: document.getElementById('lightTheme').value, 
+                rawBuffer: buffer, 
+                wavBlob: encodeRIFF(buffer), 
+                filename: `${sounds.length.toString().padStart(3, '0')}.wav`
+            });
+        }
+
+        // --- TRANSIENT PEAK DETECTOR (AUTO-CUT) ---
+        async function autoSliceBeats() {
+            if (!masterBuffer) return alert("Load audio first!");
+            document.getElementById('status').innerText = "Analyzing Transients & Beats...";
             
-            // Note calculation (Unipad MK2 standard: y*10 + x)
+            const data = masterBuffer.getChannelData(0);
+            const sampleRate = masterBuffer.sampleRate;
+            const beats = [];
+            
+            // Math: Find peaks above average energy. 
+            // Min gap between kicks = 250ms (prevents double triggering on same beat)
+            const minGap = sampleRate * 0.25; 
+            const threshold = 0.6; // High threshold for distinct transients
+            
+            let lastBeat = 0;
+            // Only scan first 15 seconds to avoid freezing UI
+            const scanLimit = Math.min(data.length, sampleRate * 15); 
+            
+            for(let i = 0; i < scanLimit; i++) {
+                if (Math.abs(data[i]) > threshold && (i - lastBeat) > minGap) {
+                    beats.push(Math.floor((i / sampleRate) * 1000)); // Convert to MS
+                    lastBeat = i;
+                    if(beats.length >= 8) break; // Auto-map up to 8 beats
+                }
+            }
+
+            if(beats.length === 0) return alert("No clear beats found. Try lowering threshold in code.");
+
+            const chain = document.getElementById('chain').value;
+            const filterType = document.getElementById('eqFilter').value;
+            
+            // Map the detected beats horizontally across the top row (Y=1, X=1 to 8)
+            for(let i=0; i < beats.length; i++) {
+                const startMs = beats[i];
+                const endMs = startMs + 300; // Auto-cut length: 300ms
+                
+                const finalBuffer = await extractSlice(startMs, endMs, filterType);
+                commitToMemory(chain, i+1, 1, 300, finalBuffer);
+                
+                // Update UI Visuals
+                const pad = document.querySelector(`.pad[data-x='${i+1}'][data-y='1']`);
+                if(pad) { pad.classList.add('assigned'); pad.innerText = "●"; }
+            }
+            document.getElementById('status').innerText = `Auto-Sliced ${beats.length} beats to Top Row!`;
+        }
+
+        // --- EXPORT & LIGHTSHOW LOGIC ---
+        function generateLightshow(theme, startX, startY, color, duration) {
+            let ledStr = `d 0\n`; let offStr = `d ${duration}\n`;
             const getNote = (nx, ny) => (ny * 10) + nx;
-            const safeNote = (nx, ny) => (nx >= 1 && nx <= 8 && ny >= 1 && ny <= 8);
             
             if (theme === "single") {
                 const note = getNote(startX, startY);
-                ledStr += `d 0\no 144 ${note} ${color}\n`;
-                offStr += `o 128 ${note} 0\n`;
-            } 
-            else if (theme === "cross") {
-                ledStr += `d 0\n`;
+                ledStr += `o 144 ${note} ${color}\n`; offStr += `o 128 ${note} 0\n`;
+            } else if (theme === "cross") {
                 for(let i=1; i<=8; i++) {
                     ledStr += `o 144 ${getNote(i, startY)} ${color}\no 144 ${getNote(startX, i)} ${color}\n`;
                     offStr += `o 128 ${getNote(i, startY)} 0\no 128 ${getNote(startX, i)} 0\n`;
                 }
-            }
-            else if (theme === "ripple") {
+            } else if (theme === "ripple") {
                 let delay = 0;
-                for (let radius = 0; radius <= 8; radius++) {
+                for (let radius = 0; radius <= 4; radius++) {
                     ledStr += `d ${delay}\n`;
                     for(let i=1; i<=8; i++) {
                         for(let j=1; j<=8; j++) {
@@ -201,21 +258,7 @@
                             }
                         }
                     }
-                    delay += 40; // Expand every 40ms
-                }
-            }
-            else if (theme === "rainbow") {
-                let delay = 0;
-                for(let step=0; step<10; step++) {
-                    ledStr += `d ${delay}\n`;
-                    for(let r=0; r<10; r++) {
-                        let rx = Math.floor(Math.random() * 8) + 1;
-                        let ry = Math.floor(Math.random() * 8) + 1;
-                        let rCol = Math.floor(Math.random() * 127);
-                        ledStr += `o 144 ${getNote(rx, ry)} ${rCol}\n`;
-                        offStr += `o 128 ${getNote(rx, ry)} 0\n`;
-                    }
-                    delay += 60;
+                    delay += 50; 
                 }
             }
             return ledStr + offStr;
@@ -242,7 +285,7 @@
 
         async function exportPack() {
             if (sounds.length === 0) return alert("Map pads first.");
-            const packTitle = prompt("Pack Name:", "Unimaker Studio") || "Unimaker Studio";
+            const packTitle = prompt("Pack Name:", "Unimaker DAW") || "Unimaker DAW";
             const producerName = prompt("Producer:", "Gajanan Patagar") || "Gajanan Patagar";
             document.getElementById('status').innerText = "Compiling Pro Archive...";
             
@@ -253,15 +296,9 @@
 
             sounds.forEach(s => {
                 soundsFolder.file(s.filename, s.wavBlob);
-                
-                // CRITICAL FIX: Swap X and Y coordinates here so Horizontal screen maps correctly to UniPad.
-                // UniPad expects the vertical stack as the first mapping variable.
-                let unipadX = s.y;
-                let unipadY = s.x;
-
+                let unipadX = s.y; let unipadY = s.x; // Axis correction
                 keySound += `${s.chain} ${unipadX} ${unipadY} ${s.filename}\n`;
                 
-                // Generate complex lightshow based on selected theme
                 let ledData = generateLightshow(s.theme, parseInt(unipadX), parseInt(unipadY), s.baseColor, s.durationMs);
                 keyLedFolder.file(`${s.chain} ${unipadX} ${unipadY} 1`, ledData); 
             });
