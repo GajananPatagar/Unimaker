@@ -3,49 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniPack Creator</title>
+    <title>Unimaker Creator Pro</title>
     <script src="jszip.min.js"></script>
     <style>
         body { font-family: sans-serif; padding: 15px; background: #121212; color: #fff; margin: 0; }
-        .controls { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        input, button, select { margin: 5px 0; padding: 10px; width: 100%; box-sizing: border-box; background: #333; color: white; border: 1px solid #555; }
-        button { background: #6200ea; font-weight: bold; border: none; margin-top: 10px; }
-        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; aspect-ratio: 1; max-width: 400px; margin: 0 auto; }
-        .pad { background: #333; border-radius: 4px; aspect-ratio: 1; border: none; cursor: pointer; }
-        .pad.assigned { background: #03dac6; }
+        .controls { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #6200ea; }
+        input, button, select { margin: 5px 0; padding: 10px; width: 100%; box-sizing: border-box; background: #333; color: white; border: 1px solid #555; border-radius: 4px; }
+        button { background: #6200ea; font-weight: bold; border: none; margin-top: 10px; cursor: pointer; }
+        button.record-btn { background: #cf6679; }
+        button.recording { background: #ff0266; animation: pulse 1s infinite; }
+        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; aspect-ratio: 1; max-width: 400px; margin: 10px auto; }
+        .pad { background: #333; border-radius: 4px; aspect-ratio: 1; border: none; cursor: pointer; transition: 0.1s; }
+        .pad.assigned { background: #03dac6; box-shadow: 0 0 10px #03dac6; }
+        .pad:active { transform: scale(0.9); }
+        .flex-row { display: flex; gap: 10px; }
+        .flex-row > div { flex: 1; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
     <div class="controls">
-        <h3>1. Audio Setup</h3>
+        <h3>1. Audio & LED Setup</h3>
         <input type="file" id="audioFile" accept="audio/*">
-        <div style="display: flex; gap: 10px;">
-            <div><label>Start (s):</label><input type="number" id="startTime" value="0" step="0.1"></div>
-            <div><label>End (s):</label><input type="number" id="endTime" value="1" step="0.1"></div>
+        <div class="flex-row">
+            <div><label>Start (sec):</label><input type="number" id="startTime" value="0" step="0.1"></div>
+            <div><label>End (sec):</label><input type="number" id="endTime" value="1" step="0.1"></div>
         </div>
-        <label>Color (Velocity 0-127):</label> <input type="number" id="colorVal" value="45" min="0" max="127">
+        <div class="flex-row">
+            <div>
+                <label>Color Mode:</label>
+                <select id="colorMode" onchange="toggleColorInput()">
+                    <option value="velocity">Basic (Velocity 0-127)</option>
+                    <option value="rgb">Advanced (24-bit RGB SysEx)</option>
+                </select>
+            </div>
+            <div id="velocityWrapper"><label>MIDI Color:</label><input type="number" id="colorVal" value="45" min="0" max="127"></div>
+            <div id="rgbWrapper" style="display:none;"><label>Hex Color:</label><input type="color" id="hexVal" value="#00ff00"></div>
+        </div>
+        <label>Animation Effect:</label>
+        <select id="animMode">
+            <option value="144">Static (Solid)</option>
+            <option value="145">Flashing</option>
+            <option value="146">Pulsing</option>
+        </select>
     </div>
 
     <div class="controls">
-        <h3>2. Grid Mapper (Tap to Assign)</h3>
-        <label>Current Chain:</label>
-        <select id="chain">
-            <option value="1">Chain 1</option>
-            <option value="2">Chain 2</option>
-            <option value="3">Chain 3</option>
-        </select>
+        <h3>2. Grid & AutoPlay Sequencer</h3>
+        <div class="flex-row">
+            <div>
+                <label>Current Chain:</label>
+                <select id="chain"><option value="1">Chain 1</option><option value="2">Chain 2</option><option value="3">Chain 3</option></select>
+            </div>
+            <div>
+                <label>Mode:</label>
+                <button id="recordBtn" class="record-btn" onclick="toggleRecord()">🔴 Start AutoPlay Record</button>
+            </div>
+        </div>
         <div class="grid" id="launchpad"></div>
     </div>
 
-    <button onclick="exportPack()">3. Export UniPack.zip</button>
-    <div id="status" style="margin-top: 15px; text-align: center; color: #03dac6;"></div>
+    <button onclick="exportPack()" style="padding: 15px; font-size: 16px;">💾 Export Final UniPack.zip</button>
+    <div id="status" style="margin-top: 15px; text-align: center; color: #03dac6; font-weight: bold;"></div>
 
     <script>
         let sounds = []; 
+        let autoPlay = [];
+        let isRecording = false;
+        let recordStartTime = 0;
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioBuffer = null;
 
-        // Build 8x8 Visual Grid
+        function toggleColorInput() {
+            const isRGB = document.getElementById('colorMode').value === 'rgb';
+            document.getElementById('velocityWrapper').style.display = isRGB ? 'none' : 'block';
+            document.getElementById('rgbWrapper').style.display = isRGB ? 'block' : 'none';
+        }
+
+        function toggleRecord() {
+            const btn = document.getElementById('recordBtn');
+            isRecording = !isRecording;
+            if (isRecording) {
+                if (autoPlay.length === 0) recordStartTime = Date.now();
+                btn.innerText = "⏹ Stop AutoPlay Record";
+                btn.classList.add('recording');
+                document.getElementById('status').innerText = "🔴 Recording... Tap assigned pads!";
+            } else {
+                btn.innerText = "🔴 Resume AutoPlay Record";
+                btn.classList.remove('recording');
+                document.getElementById('status').innerText = `⏹ Recorded ${autoPlay.length} pad strikes.`;
+            }
+        }
+
         const grid = document.getElementById('launchpad');
         for(let y = 1; y <= 8; y++) {
             for(let x = 1; x <= 8; x++) {
@@ -53,7 +102,7 @@
                 btn.className = 'pad';
                 btn.dataset.x = x;
                 btn.dataset.y = y;
-                btn.onclick = () => assignToPad(btn, x, y);
+                btn.onclick = () => handlePadClick(btn, x, y);
                 grid.appendChild(btn);
             }
         }
@@ -61,79 +110,107 @@
         document.getElementById('audioFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             audioBuffer = await audioContext.decodeAudioData(await file.arrayBuffer());
-            document.getElementById('status').innerText = "Track Loaded. Adjust times and tap a pad.";
+            document.getElementById('status').innerText = "Audio Ready. Assign to grid.";
         });
 
-        async function assignToPad(padElement, x, y) {
-            if (!audioBuffer) return alert("Load audio first!");
-            const start = parseFloat(document.getElementById('startTime').value);
-            const end = parseFloat(document.getElementById('endTime').value);
+        async function handlePadClick(padElement, x, y) {
             const chain = document.getElementById('chain').value;
-            const color = document.getElementById('colorVal').value;
             
-            const sampleRate = audioBuffer.sampleRate;
-            const startIdx = Math.floor(start * sampleRate);
-            const endIdx = Math.floor(end * sampleRate);
-            const length = endIdx - startIdx;
-            
-            const sliceBuffer = audioContext.createBuffer(audioBuffer.numberOfChannels, length, sampleRate);
-            for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
-                const channelData = audioBuffer.getChannelData(i);
-                const sliceData = sliceBuffer.getChannelData(i);
-                for (let j = 0; j < length; j++) sliceData[j] = channelData[startIdx + j];
+            if (isRecording) {
+                // Sequence Recorder Mode
+                const timestamp = Date.now() - recordStartTime;
+                autoPlay.push(`${timestamp} ${chain} ${x} ${y}`);
+                padElement.style.background = "#fff";
+                setTimeout(() => padElement.style.background = "", 100);
+            } else {
+                // Audio Assignment Mode
+                if (!audioBuffer) return alert("Load an audio track first!");
+                const start = parseFloat(document.getElementById('startTime').value);
+                const end = parseFloat(document.getElementById('endTime').value);
+                const animMode = document.getElementById('animMode').value;
+                const isRGB = document.getElementById('colorMode').value === 'rgb';
+                
+                let colorData = {};
+                if (isRGB) {
+                    const hex = document.getElementById('hexVal').value;
+                    colorData = { 
+                        type: 'rgb', 
+                        r: Math.floor(parseInt(hex.substr(1,2), 16) / 2), // Scale 0-255 to 0-127 for SysEx
+                        g: Math.floor(parseInt(hex.substr(3,2), 16) / 2),
+                        b: Math.floor(parseInt(hex.substr(5,2), 16) / 2)
+                    };
+                } else {
+                    colorData = { type: 'velocity', val: document.getElementById('colorVal').value };
+                }
+                
+                const sampleRate = audioBuffer.sampleRate;
+                const sliceBuffer = audioContext.createBuffer(audioBuffer.numberOfChannels, Math.floor((end - start) * sampleRate), sampleRate);
+                for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+                    const channelData = audioBuffer.getChannelData(i);
+                    const sliceData = sliceBuffer.getChannelData(i);
+                    for (let j = 0; j < sliceData.length; j++) sliceData[j] = channelData[Math.floor(start * sampleRate) + j];
+                }
+                
+                sounds.push({ chain, x, y, colorData, animMode, wavBlob: encodeRIFF(sliceBuffer), filename: `${sounds.length.toString().padStart(3, '0')}.wav` });
+                padElement.classList.add('assigned');
+                document.getElementById('status').innerText = `Assigned to Chain ${chain}, Pad [${x},${y}]`;
             }
-            
-            sounds.push({ chain, x, y, color, wavBlob: encodeRIFF(sliceBuffer), filename: `${sounds.length.toString().padStart(3, '0')}.wav` });
-            padElement.classList.add('assigned');
-            document.getElementById('status').innerText = `Assigned slice to Chain ${chain}, Pad [${x},${y}]`;
         }
 
+        // Custom Binary Encoder for 16-bit PCM RIFF Header
         function encodeRIFF(buffer) {
             let numChannels = buffer.numberOfChannels;
             let result = numChannels === 2 ? interleave(buffer.getChannelData(0), buffer.getChannelData(1)) : buffer.getChannelData(0);
             let dataLength = result.length * 2;
             let bufferData = new ArrayBuffer(44 + dataLength);
             let view = new DataView(bufferData);
-
             let writeString = (v, o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
             writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + dataLength, true); writeString(view, 8, 'WAVE'); writeString(view, 12, 'fmt ');
             view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numChannels, true);
             view.setUint32(24, buffer.sampleRate, true); view.setUint32(28, buffer.sampleRate * numChannels * 2, true);
             view.setUint16(32, numChannels * 2, true); view.setUint16(34, 16, true); writeString(view, 36, 'data'); view.setUint32(40, dataLength, true);
-
             let offset = 44;
             for (let i = 0; i < result.length; i++, offset += 2) {
-                let s = Math.max(-1, Math.min(1, result[i]));
-                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                let s = Math.max(-1, Math.min(1, result[i])); view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
             }
             return new Blob([view], { type: 'audio/wav' });
         }
-
-        function interleave(left, right) {
-            let res = new Float32Array(left.length + right.length);
-            for (let i = 0; i < left.length; i++) { res[i*2] = left[i]; res[i*2+1] = right[i]; }
-            return res;
-        }
+        function interleave(left, right) { let res = new Float32Array(left.length + right.length); for (let i = 0; i < left.length; i++) { res[i*2] = left[i]; res[i*2+1] = right[i]; } return res; }
 
         async function exportPack() {
             if (sounds.length === 0) return alert("Assign pads first.");
-            document.getElementById('status').innerText = "Compiling Archive...";
+            document.getElementById('status').innerText = "Compiling Advanced Archive...";
             const zip = new JSZip();
             let keySound = "";
             
-            zip.file("info", `title=Unimaker Pack\nproducer=Gajanan Patagar\nchain=8`);
-            zip.file("autoPlay", ""); 
+            // Generate Metadata
+            zip.file("info", `title=Unimaker Pro\nproducer=Gajanan Patagar\nchain=8`);
+            // Generate AutoPlay Sequence
+            zip.file("autoPlay", autoPlay.join('\n')); 
+            
             const soundsFolder = zip.folder("sounds"); const keyLedFolder = zip.folder("keyLED");
 
             sounds.forEach(s => {
                 soundsFolder.file(s.filename, s.wavBlob);
                 keySound += `${s.chain} ${s.x} ${s.y} ${s.filename}\n`;
-                keyLedFolder.file(`${s.chain} ${s.x} ${s.y} 1`, `d 0\no 144 0 ${s.color}\n`); 
+                
+                let ledData = "";
+                if (s.colorData.type === 'velocity') {
+                    // Standard MIDI Note-On Animation Protocol
+                    ledData = `d 0\no ${s.animMode} 0 ${s.colorData.val}\n`;
+                } else {
+                    // 24-bit RGB SysEx Translation
+                    // Launchpad Grid Index calculation (y*10 + x coordinate system)
+                    const ledIndex = (s.y * 10) + parseInt(s.x);
+                    // F0 00 20 29 02 0C 03 <LED_Index> <Red> <Green> <Blue> F7 translated to decimal for plaintext mapping
+                    ledData = `d 0\nx 240 0 32 41 2 12 3 ${ledIndex} ${s.colorData.r} ${s.colorData.g} ${s.colorData.b} 247\n`;
+                }
+                keyLedFolder.file(`${s.chain} ${s.x} ${s.y} 1`, ledData); 
             });
 
             zip.file("keySound", keySound);
             const content = await zip.generateAsync({ type: "base64" });
-            if (window.AndroidBridge) window.AndroidBridge.saveZip("data:application/zip;base64," + content, "Unimaker_Pack.zip");
+            if (window.AndroidBridge) window.AndroidBridge.saveZip("data:application/zip;base64," + content, "Unimaker_Pro_Pack.zip");
             document.getElementById('status').innerText = "Saved to Downloads!";
         }
     </script>
