@@ -6,43 +6,71 @@
     <title>UniPack Creator</title>
     <script src="jszip.min.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #121212; color: #fff; }
-        input, button { margin: 10px 0; padding: 10px; width: 100%; box-sizing: border-box; }
-        button { background: #6200ea; color: white; border: none; font-weight: bold; }
+        body { font-family: sans-serif; padding: 15px; background: #121212; color: #fff; margin: 0; }
+        .controls { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        input, button, select { margin: 5px 0; padding: 10px; width: 100%; box-sizing: border-box; background: #333; color: white; border: 1px solid #555; }
+        button { background: #6200ea; font-weight: bold; border: none; margin-top: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; aspect-ratio: 1; max-width: 400px; margin: 0 auto; }
+        .pad { background: #333; border-radius: 4px; aspect-ratio: 1; border: none; cursor: pointer; }
+        .pad.assigned { background: #03dac6; }
     </style>
 </head>
 <body>
-    <h3>Offline Audio DSP & Mapper</h3>
-    <label>Load Track:</label> <input type="file" id="audioFile" accept="audio/*">
-    <label>Slice Start (sec):</label> <input type="number" id="startTime" value="0" step="0.1">
-    <label>Slice End (sec):</label> <input type="number" id="endTime" value="1" step="0.1">
-    
-    <label>Target Chain (1-8):</label> <input type="number" id="chain" value="1" min="1" max="8">
-    <label>Pad X (1-8):</label> <input type="number" id="padX" value="1" min="1" max="8">
-    <label>Pad Y (1-8):</label> <input type="number" id="padY" value="1" min="1" max="8">
-    <label>MIDI Velocity Color (0-127):</label> <input type="number" id="colorVal" value="45" min="0" max="127">
-    
-    <button onclick="addSlice()">Add Pad to Memory</button>
-    <button onclick="exportPack()">Export UniPack.zip</button>
-    <div id="status"></div>
+    <div class="controls">
+        <h3>1. Audio Setup</h3>
+        <input type="file" id="audioFile" accept="audio/*">
+        <div style="display: flex; gap: 10px;">
+            <div><label>Start (s):</label><input type="number" id="startTime" value="0" step="0.1"></div>
+            <div><label>End (s):</label><input type="number" id="endTime" value="1" step="0.1"></div>
+        </div>
+        <label>Color (Velocity 0-127):</label> <input type="number" id="colorVal" value="45" min="0" max="127">
+    </div>
+
+    <div class="controls">
+        <h3>2. Grid Mapper (Tap to Assign)</h3>
+        <label>Current Chain:</label>
+        <select id="chain">
+            <option value="1">Chain 1</option>
+            <option value="2">Chain 2</option>
+            <option value="3">Chain 3</option>
+        </select>
+        <div class="grid" id="launchpad"></div>
+    </div>
+
+    <button onclick="exportPack()">3. Export UniPack.zip</button>
+    <div id="status" style="margin-top: 15px; text-align: center; color: #03dac6;"></div>
 
     <script>
         let sounds = []; 
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioBuffer = null;
 
+        // Build 8x8 Visual Grid
+        const grid = document.getElementById('launchpad');
+        for(let y = 1; y <= 8; y++) {
+            for(let x = 1; x <= 8; x++) {
+                let btn = document.createElement('button');
+                btn.className = 'pad';
+                btn.dataset.x = x;
+                btn.dataset.y = y;
+                btn.onclick = () => assignToPad(btn, x, y);
+                grid.appendChild(btn);
+            }
+        }
+
         document.getElementById('audioFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             audioBuffer = await audioContext.decodeAudioData(await file.arrayBuffer());
-            document.getElementById('status').innerText = "Audio Decoded Successfully.";
+            document.getElementById('status').innerText = "Track Loaded. Adjust times and tap a pad.";
         });
 
-        async function addSlice() {
+        async function assignToPad(padElement, x, y) {
             if (!audioBuffer) return alert("Load audio first!");
             const start = parseFloat(document.getElementById('startTime').value);
             const end = parseFloat(document.getElementById('endTime').value);
+            const chain = document.getElementById('chain').value;
+            const color = document.getElementById('colorVal').value;
             
-            // Mathematical extraction based on Sample Rate
             const sampleRate = audioBuffer.sampleRate;
             const startIdx = Math.floor(start * sampleRate);
             const endIdx = Math.floor(end * sampleRate);
@@ -52,21 +80,14 @@
             for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
                 const channelData = audioBuffer.getChannelData(i);
                 const sliceData = sliceBuffer.getChannelData(i);
-                for (let j = 0; j < length; j++) { sliceData[j] = channelData[startIdx + j]; }
+                for (let j = 0; j < length; j++) sliceData[j] = channelData[startIdx + j];
             }
             
-            sounds.push({
-                chain: document.getElementById('chain').value,
-                x: document.getElementById('padX').value,
-                y: document.getElementById('padY').value,
-                color: document.getElementById('colorVal').value,
-                wavBlob: encodeRIFF(sliceBuffer),
-                filename: `${sounds.length.toString().padStart(3, '0')}.wav`
-            });
-            document.getElementById('status').innerText = `Grid Assigned: Pad ${sounds.length}`;
+            sounds.push({ chain, x, y, color, wavBlob: encodeRIFF(sliceBuffer), filename: `${sounds.length.toString().padStart(3, '0')}.wav` });
+            padElement.classList.add('assigned');
+            document.getElementById('status').innerText = `Assigned slice to Chain ${chain}, Pad [${x},${y}]`;
         }
 
-        // Custom Binary Encoder for 16-bit PCM RIFF Header
         function encodeRIFF(buffer) {
             let numChannels = buffer.numberOfChannels;
             let result = numChannels === 2 ? interleave(buffer.getChannelData(0), buffer.getChannelData(1)) : buffer.getChannelData(0);
@@ -74,20 +95,11 @@
             let bufferData = new ArrayBuffer(44 + dataLength);
             let view = new DataView(bufferData);
 
-            let writeString = (view, offset, string) => { for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i)); };
-            writeString(view, 0, 'RIFF');
-            view.setUint32(4, 36 + dataLength, true);
-            writeString(view, 8, 'WAVE');
-            writeString(view, 12, 'fmt ');
-            view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true); // Linear Quantization
-            view.setUint16(22, numChannels, true);
-            view.setUint32(24, buffer.sampleRate, true);
-            view.setUint32(28, buffer.sampleRate * numChannels * 2, true);
-            view.setUint16(32, numChannels * 2, true);
-            view.setUint16(34, 16, true);
-            writeString(view, 36, 'data');
-            view.setUint32(40, dataLength, true);
+            let writeString = (v, o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+            writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + dataLength, true); writeString(view, 8, 'WAVE'); writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numChannels, true);
+            view.setUint32(24, buffer.sampleRate, true); view.setUint32(28, buffer.sampleRate * numChannels * 2, true);
+            view.setUint16(32, numChannels * 2, true); view.setUint16(34, 16, true); writeString(view, 36, 'data'); view.setUint32(40, dataLength, true);
 
             let offset = 44;
             for (let i = 0; i < result.length; i++, offset += 2) {
@@ -109,27 +121,20 @@
             const zip = new JSZip();
             let keySound = "";
             
-            // Metadata Construction
-            zip.file("info", `title=Termux Pack\nproducer=Mobile User\nchain=8`);
+            zip.file("info", `title=Unimaker Pack\nproducer=Gajanan Patagar\nchain=8`);
             zip.file("autoPlay", ""); 
-            
-            const soundsFolder = zip.folder("sounds");
-            const keyLedFolder = zip.folder("keyLED");
+            const soundsFolder = zip.folder("sounds"); const keyLedFolder = zip.folder("keyLED");
 
             sounds.forEach(s => {
                 soundsFolder.file(s.filename, s.wavBlob);
                 keySound += `${s.chain} ${s.x} ${s.y} ${s.filename}\n`;
-                // Serialization of Novation Animation Data via MIDI Velocity
                 keyLedFolder.file(`${s.chain} ${s.x} ${s.y} 1`, `d 0\no 144 0 ${s.color}\n`); 
             });
 
             zip.file("keySound", keySound);
-
             const content = await zip.generateAsync({ type: "base64" });
-            if (window.AndroidBridge) {
-                window.AndroidBridge.saveZip("data:application/zip;base64," + content, "MyTermuxPack.zip");
-            }
-            document.getElementById('status').innerText = "Exporting to device downloads.";
+            if (window.AndroidBridge) window.AndroidBridge.saveZip("data:application/zip;base64," + content, "Unimaker_Pack.zip");
+            document.getElementById('status').innerText = "Saved to Downloads!";
         }
     </script>
 </body>
