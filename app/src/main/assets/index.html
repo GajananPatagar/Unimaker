@@ -10,26 +10,26 @@
         .controls { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #6200ea; }
         input, button, select { margin: 5px 0; padding: 10px; width: 100%; box-sizing: border-box; background: #333; color: white; border: 1px solid #555; border-radius: 4px; }
         button { background: #6200ea; font-weight: bold; border: none; margin-top: 10px; cursor: pointer; }
-        button.record-btn { background: #cf6679; }
-        button.recording { background: #ff0266; animation: pulse 1s infinite; }
+        button.preview-btn { background: #03dac6; color: #000; }
         .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; aspect-ratio: 1; max-width: 400px; margin: 10px auto; }
-        .pad { background: #333; border-radius: 4px; aspect-ratio: 1; border: none; cursor: pointer; transition: 0.1s; }
-        .pad.assigned { background: #03dac6; box-shadow: 0 0 10px #03dac6; }
+        .pad { background: #333; border-radius: 4px; aspect-ratio: 1; border: none; cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .pad.assigned { background: #bb86fc; box-shadow: 0 0 10px #bb86fc; }
         .pad:active { transform: scale(0.9); }
         .flex-row { display: flex; gap: 10px; }
         .flex-row > div { flex: 1; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
     <div class="controls">
-        <h3>1. Audio & LED Setup</h3>
+        <h3>1. Audio Setup & Preview</h3>
         <input type="file" id="audioFile" accept="audio/*">
         <div class="flex-row">
             <div><label>Start (sec):</label><input type="number" id="startTime" value="0" step="0.1"></div>
-            <div><label>End (sec):</label><input type="number" id="endTime" value="1" step="0.1"></div>
+            <div><label>End (sec):</label><input type="number" id="endTime" value="5" step="0.1"></div>
         </div>
-        <div class="flex-row">
+        <button class="preview-btn" onclick="playPreview()">▶ Play Audio Preview</button>
+        
+        <div class="flex-row" style="margin-top: 10px;">
             <div>
                 <label>Color Mode:</label>
                 <select id="colorMode" onchange="toggleColorInput()">
@@ -49,17 +49,13 @@
     </div>
 
     <div class="controls">
-        <h3>2. Grid & AutoPlay Sequencer</h3>
-        <div class="flex-row">
-            <div>
-                <label>Current Chain:</label>
-                <select id="chain"><option value="1">Chain 1</option><option value="2">Chain 2</option><option value="3">Chain 3</option></select>
-            </div>
-            <div>
-                <label>Mode:</label>
-                <button id="recordBtn" class="record-btn" onclick="toggleRecord()">🔴 Start AutoPlay Record</button>
-            </div>
-        </div>
+        <h3>2. Grid Mapper (Tap to Assign/Play)</h3>
+        <label>Current Chain Layer:</label>
+        <select id="chain" onchange="updateGridVisuals()">
+            <option value="1">Chain 1</option>
+            <option value="2">Chain 2</option>
+            <option value="3">Chain 3</option>
+        </select>
         <div class="grid" id="launchpad"></div>
     </div>
 
@@ -68,9 +64,6 @@
 
     <script>
         let sounds = []; 
-        let autoPlay = [];
-        let isRecording = false;
-        let recordStartTime = 0;
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let audioBuffer = null;
 
@@ -78,21 +71,6 @@
             const isRGB = document.getElementById('colorMode').value === 'rgb';
             document.getElementById('velocityWrapper').style.display = isRGB ? 'none' : 'block';
             document.getElementById('rgbWrapper').style.display = isRGB ? 'block' : 'none';
-        }
-
-        function toggleRecord() {
-            const btn = document.getElementById('recordBtn');
-            isRecording = !isRecording;
-            if (isRecording) {
-                if (autoPlay.length === 0) recordStartTime = Date.now();
-                btn.innerText = "⏹ Stop AutoPlay Record";
-                btn.classList.add('recording');
-                document.getElementById('status').innerText = "🔴 Recording... Tap assigned pads!";
-            } else {
-                btn.innerText = "🔴 Resume AutoPlay Record";
-                btn.classList.remove('recording');
-                document.getElementById('status').innerText = `⏹ Recorded ${autoPlay.length} pad strikes.`;
-            }
         }
 
         const grid = document.getElementById('launchpad');
@@ -110,49 +88,97 @@
         document.getElementById('audioFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             audioBuffer = await audioContext.decodeAudioData(await file.arrayBuffer());
-            document.getElementById('status').innerText = "Audio Ready. Assign to grid.";
+            document.getElementById('status').innerText = "Audio Ready. Set times and tap a pad.";
         });
+
+        function updateGridVisuals() {
+            const chain = document.getElementById('chain').value;
+            document.querySelectorAll('.pad').forEach(pad => {
+                const isAssigned = sounds.some(s => s.chain == chain && s.x == pad.dataset.x && s.y == pad.dataset.y);
+                if (isAssigned) {
+                    pad.classList.add('assigned');
+                    pad.innerText = "🎵";
+                } else {
+                    pad.classList.remove('assigned');
+                    pad.innerText = "";
+                }
+            });
+        }
+
+        async function playPreview() {
+            if (!audioBuffer) return alert("Load an audio track first!");
+            const start = parseFloat(document.getElementById('startTime').value);
+            const end = parseFloat(document.getElementById('endTime').value);
+            if (end <= start) return alert("End time must be greater than start time.");
+            
+            const sampleRate = audioBuffer.sampleRate;
+            const sliceBuffer = audioContext.createBuffer(audioBuffer.numberOfChannels, Math.floor((end - start) * sampleRate), sampleRate);
+            for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+                sliceBuffer.copyToChannel(audioBuffer.getChannelData(i).subarray(Math.floor(start * sampleRate), Math.floor(end * sampleRate)), i);
+            }
+            
+            const source = audioContext.createBufferSource();
+            source.buffer = sliceBuffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+            document.getElementById('status').innerText = `Playing preview: ${start}s to ${end}s`;
+        }
 
         async function handlePadClick(padElement, x, y) {
             const chain = document.getElementById('chain').value;
             
-            if (isRecording) {
-                const timestamp = Date.now() - recordStartTime;
-                autoPlay.push(`${timestamp} ${chain} ${x} ${y}`);
-                padElement.style.background = "#fff";
-                setTimeout(() => padElement.style.background = "", 100);
-            } else {
-                if (!audioBuffer) return alert("Load an audio track first!");
-                const start = parseFloat(document.getElementById('startTime').value);
-                const end = parseFloat(document.getElementById('endTime').value);
-                const animMode = document.getElementById('animMode').value;
-                const isRGB = document.getElementById('colorMode').value === 'rgb';
-                
-                let colorData = {};
-                if (isRGB) {
-                    const hex = document.getElementById('hexVal').value;
-                    colorData = { 
-                        type: 'rgb', 
-                        r: Math.floor(parseInt(hex.substr(1,2), 16) / 2), 
-                        g: Math.floor(parseInt(hex.substr(3,2), 16) / 2),
-                        b: Math.floor(parseInt(hex.substr(5,2), 16) / 2)
-                    };
-                } else {
-                    colorData = { type: 'velocity', val: document.getElementById('colorVal').value };
-                }
-                
-                const sampleRate = audioBuffer.sampleRate;
-                const sliceBuffer = audioContext.createBuffer(audioBuffer.numberOfChannels, Math.floor((end - start) * sampleRate), sampleRate);
-                for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
-                    const channelData = audioBuffer.getChannelData(i);
-                    const sliceData = sliceBuffer.getChannelData(i);
-                    for (let j = 0; j < sliceData.length; j++) sliceData[j] = channelData[Math.floor(start * sampleRate) + j];
-                }
-                
-                sounds.push({ chain, x, y, colorData, animMode, wavBlob: encodeRIFF(sliceBuffer), filename: `${sounds.length.toString().padStart(3, '0')}.wav` });
-                padElement.classList.add('assigned');
-                document.getElementById('status').innerText = `Assigned to Chain ${chain}, Pad [${x},${y}]`;
+            // If already assigned, play the sound instead of overwriting
+            const existingSound = sounds.find(s => s.chain == chain && s.x == x && s.y == y);
+            if (existingSound) {
+                const source = audioContext.createBufferSource();
+                source.buffer = existingSound.rawBuffer;
+                source.connect(audioContext.destination);
+                source.start(0);
+                document.getElementById('status').innerText = `Pad [${x},${y}] is already assigned. Playing sound.`;
+                return;
             }
+
+            // Assign new sound
+            if (!audioBuffer) return alert("Load an audio track first!");
+            const start = parseFloat(document.getElementById('startTime').value);
+            const end = parseFloat(document.getElementById('endTime').value);
+            const duration = end - start;
+            if (duration <= 0) return alert("End time must be greater than start time.");
+
+            const animMode = document.getElementById('animMode').value;
+            const isRGB = document.getElementById('colorMode').value === 'rgb';
+            
+            let colorData = {};
+            if (isRGB) {
+                const hex = document.getElementById('hexVal').value;
+                colorData = { 
+                    type: 'rgb', 
+                    r: Math.floor(parseInt(hex.substr(1,2), 16) / 2), 
+                    g: Math.floor(parseInt(hex.substr(3,2), 16) / 2),
+                    b: Math.floor(parseInt(hex.substr(5,2), 16) / 2)
+                };
+            } else {
+                colorData = { type: 'velocity', val: document.getElementById('colorVal').value };
+            }
+            
+            const sampleRate = audioBuffer.sampleRate;
+            const sliceBuffer = audioContext.createBuffer(audioBuffer.numberOfChannels, Math.floor(duration * sampleRate), sampleRate);
+            for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+                const channelData = audioBuffer.getChannelData(i);
+                const sliceData = sliceBuffer.getChannelData(i);
+                for (let j = 0; j < sliceData.length; j++) sliceData[j] = channelData[Math.floor(start * sampleRate) + j];
+            }
+            
+            sounds.push({ 
+                chain, x, y, duration, colorData, animMode, 
+                rawBuffer: sliceBuffer, 
+                wavBlob: encodeRIFF(sliceBuffer), 
+                filename: `${sounds.length.toString().padStart(3, '0')}.wav` 
+            });
+            
+            padElement.classList.add('assigned');
+            padElement.innerText = "🎵";
+            document.getElementById('status').innerText = `Assigned to Chain ${chain}, Pad [${x},${y}]`;
         }
 
         function encodeRIFF(buffer) {
@@ -176,33 +202,44 @@
 
         async function exportPack() {
             if (sounds.length === 0) return alert("Assign pads first.");
-            document.getElementById('status').innerText = "Compiling Advanced Archive...";
+            
+            const packTitle = prompt("Enter Pack Title:", "My Unimaker Pack") || "My Unimaker Pack";
+            const producerName = prompt("Enter Producer Name:", "Gajanan Patagar") || "Gajanan Patagar";
+
+            document.getElementById('status').innerText = "Compiling Archive...";
             const zip = new JSZip();
             let keySound = "";
             
-            zip.file("info", `title=Unimaker Pro\nproducer=Gajanan Patagar\nchain=8`);
-            zip.file("autoPlay", autoPlay.join('\n')); 
+            // Fixed Info Format: Added buttonX, buttonY, and exact producerName variable
+            zip.file("info", `title=${packTitle}\nproducerName=${producerName}\nbuttonX=8\nbuttonY=8\nchain=8`);
+            zip.file("autoPlay", ""); 
             
-            const soundsFolder = zip.folder("sounds"); const keyLedFolder = zip.folder("keyLED");
+            const soundsFolder = zip.folder("sounds"); 
+            const keyLedFolder = zip.folder("keyLED");
 
             sounds.forEach(s => {
                 soundsFolder.file(s.filename, s.wavBlob);
                 keySound += `${s.chain} ${s.x} ${s.y} ${s.filename}\n`;
                 
+                // Calculate correct MIDI note for Launchpad mapping based on X/Y coordinates
+                const note = ((9 - s.y) * 10) + parseInt(s.x);
+                const delayOff = Math.floor(s.duration * 1000); // Turn off light when audio ends
+
                 let ledData = "";
                 if (s.colorData.type === 'velocity') {
-                    ledData = `d 0\no ${s.animMode} 0 ${s.colorData.val}\n`;
+                    // Turn on with specified animation, wait for duration, turn off
+                    ledData = `d 0\no ${s.animMode} ${note} ${s.colorData.val}\nd ${delayOff}\no 144 ${note} 0\n`;
                 } else {
-                    const ledIndex = (s.y * 10) + parseInt(s.x);
-                    ledData = `d 0\nx 240 0 32 41 2 12 3 ${ledIndex} ${s.colorData.r} ${s.colorData.g} ${s.colorData.b} 247\n`;
+                    // 24-bit RGB SysEx formatting
+                    ledData = `d 0\nx 240 0 32 41 2 12 3 ${note} ${s.colorData.r} ${s.colorData.g} ${s.colorData.b} 247\nd ${delayOff}\nx 240 0 32 41 2 12 3 ${note} 0 0 0 247\n`;
                 }
                 keyLedFolder.file(`${s.chain} ${s.x} ${s.y} 1`, ledData); 
             });
 
             zip.file("keySound", keySound);
             const content = await zip.generateAsync({ type: "base64" });
-            if (window.AndroidBridge) window.AndroidBridge.saveZip("data:application/zip;base64," + content, "Unimaker_Pro_Pack.zip");
-            document.getElementById('status').innerText = "Saved to Downloads!";
+            if (window.AndroidBridge) window.AndroidBridge.saveZip("data:application/zip;base64," + content, `${packTitle.replace(/\s+/g, '_')}.zip`);
+            document.getElementById('status').innerText = "Pack Saved to Downloads!";
         }
     </script>
 </body>
