@@ -3,73 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unimaker DAW - Ultimate Edition</title>
+    <title>Unimaker DAW - Master Edition</title>
     <script src="jszip.min.js"></script>
     <style>
-        :root { --bg: #09090b; --panel: #14141a; --accent: #ff0055; --text: #e2e2e2; }
+        :root { --bg: #0b0b0f; --panel: #16161e; --accent: #00ff88; --text: #e2e2e2; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 12px; margin: 0; font-size: 13px;}
         .header { text-align: center; font-size: 22px; font-weight: 900; margin-bottom: 10px; color: var(--accent); letter-spacing: 2px; }
-        .container { display: flex; flex-direction: column; gap: 10px; max-width: 700px; margin: 0 auto; }
+        .container { display: flex; flex-direction: column; gap: 12px; max-width: 700px; margin: 0 auto; padding-bottom: 30px;}
         .panel { background: var(--panel); padding: 15px; border-radius: 10px; border: 1px solid #282833; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .panel h3 { margin-top: 0; color: #fff; border-bottom: 2px solid #282833; padding-bottom: 5px; font-size: 14px; text-transform: uppercase; }
-        input, select, button { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; background: #1c1c24; color: #fff; border: 1px solid #3d3d4a; border-radius: 4px; font-size: 13px;}
+        input, select, button { width: 100%; padding: 12px; margin-top: 5px; box-sizing: border-box; background: #1c1c24; color: #fff; border: 1px solid #3d3d4a; border-radius: 6px; font-size: 14px; font-weight: bold;}
         input:focus, select:focus { border-color: var(--accent); outline: none; }
-        button { background: #3d3d4a; font-weight: 800; cursor: pointer; border: none; text-transform: uppercase; }
+        button { background: #3d3d4a; font-weight: 800; cursor: pointer; border: none; text-transform: uppercase; transition: 0.2s;}
         button:hover { background: #5a5a72; }
-        .btn-primary { background: var(--accent); color: #fff; padding: 15px; font-size: 15px; margin-top: 5px;}
-        .btn-primary:hover { box-shadow: 0 0 15px var(--accent); }
-        .btn-preview { background: #00d2d3; color: #000; width: 48%; }
+        
+        .btn-play-main { background: #00ff88; color: #000; padding: 18px; font-size: 18px; box-shadow: 0 0 10px rgba(0,255,136,0.3); margin-top: 10px;}
+        .btn-play-main:hover { background: #00d672; }
+        .btn-export { background: #00a8ff; color: #fff; padding: 18px; font-size: 16px; margin-top: 10px;}
+        .btn-auto { background: #ff4757; color: #fff; padding: 15px; margin-top: 10px;}
+        
         .flex-row { display: flex; gap: 8px; align-items: center;}
         .flex-row > div { flex: 1; }
-        canvas { width: 100%; height: 60px; background: #000; border: 1px solid #3d3d4a; border-radius: 4px; margin-top: 5px; }
+        canvas { width: 100%; height: 70px; background: #000; border: 1px solid #3d3d4a; border-radius: 4px; margin-top: 5px; }
+        
         .grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; aspect-ratio: 1; margin: 10px auto; padding: 8px; background: #000; border-radius: 6px; border: 2px solid #282833; }
         .pad { background: #1e1e2d; border-radius: 4px; aspect-ratio: 1; border: 1px solid #2f3542; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold;}
-        .pad.assigned { background: var(--accent); box-shadow: 0 0 10px var(--accent); color: #fff; border-color: #fff;}
+        .pad.assigned { background: var(--accent); box-shadow: 0 0 10px var(--accent); color: #000; border-color: #fff;}
         .pad:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
-    <div class="header">UNIMAKER ULTIMATE DAW</div>
+    <div class="header">UNIMAKER DAW</div>
     
     <div class="container">
         <!-- Audio Engine & FX Panel -->
         <div class="panel">
-            <h3>1. Audio Engine & FX</h3>
+            <h3>1. Audio Engine & FX Stems</h3>
             <input type="file" id="audioFile" accept="audio/*">
             <canvas id="waveform"></canvas>
             
+            <button class="btn-play-main" onclick="playPreview(false)">▶ PLAY PREVIEW</button>
             <div class="flex-row" style="margin-top: 5px;">
+                <button onclick="playPreview(true)">🔁 Loop Preview</button>
+                <button style="background: #ff4757; color: white;" onclick="stopPreview()">⏹ Stop Audio</button>
+            </div>
+
+            <div class="flex-row" style="margin-top: 15px;">
                 <div><label>Start (ms)</label><input type="number" id="startTime" value="0" step="10" onchange="drawWaveform()"></div>
                 <div><label>End (ms)</label><input type="number" id="endTime" value="500" step="10" onchange="drawWaveform()"></div>
             </div>
             
             <div class="flex-row" style="margin-top: 5px;">
-                <div><label>Pitch/Speed</label><input type="number" id="pitch" value="1.0" step="0.1" min="0.1" max="3.0"></div>
-                <div><label>Volume Boost</label><input type="number" id="gain" value="1.0" step="0.1" min="0.1" max="5.0"></div>
-                <div><label>Echo Delay</label><select id="echo"><option value="0">Off</option><option value="0.2">Slapback</option><option value="0.5">Deep Space</option></select></div>
+                <div><label>Speed / Pitch</label><input type="number" id="pitch" value="1.0" step="0.1" min="0.1" max="3.0"></div>
+                <div><label>Volume Gain</label><input type="number" id="gain" value="1.0" step="0.1" min="0.1" max="5.0"></div>
+                <div><label>Delay FX</label><select id="echo"><option value="0">Off</option><option value="0.2">Slapback</option><option value="0.5">Deep Space</option></select></div>
             </div>
             
             <div class="flex-row" style="margin-top: 5px;">
                 <div><label>Fade In (ms)</label><input type="number" id="fadeIn" value="0" step="10"></div>
                 <div><label>Fade Out (ms)</label><input type="number" id="fadeOut" value="0" step="10"></div>
+                <div>
+                    <label>Stem Filter</label>
+                    <select id="eqFilter">
+                        <option value="none">None</option><option value="bass">Bass</option><option value="vocal">Vocal</option><option value="drums">Hi-Hats</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="flex-row" style="margin-top: 10px; justify-content: space-between;">
+            <div class="flex-row" style="margin-top: 15px; justify-content: space-between; font-size: 15px;">
                 <label><input type="checkbox" id="reverse"> Reverse</label>
                 <label><input type="checkbox" id="normalize"> Normalize Volume</label>
+                <div id="bpmDisplay" style="color: var(--accent); font-weight: bold; text-align: right;">BPM: --</div>
             </div>
-
-            <div class="flex-row" style="margin-top: 10px; justify-content: center;">
-                <button class="btn-preview" onclick="playPreview(false)">▶ Play Once</button>
-                <button class="btn-preview" style="background: #feca57;" onclick="playPreview(true)">🔁 Loop Preview</button>
-                <button class="btn-preview" style="background: #ff6b6b;" onclick="stopPreview()">⏹ Stop</button>
-            </div>
-            <div id="bpmDisplay" style="text-align: center; margin-top: 5px; color: #00d2d3; font-weight: bold;">BPM: --</div>
         </div>
 
         <!-- Lightshow Panel -->
         <div class="panel">
-            <h3>2. Lightshow Macros</h3>
+            <h3>2. Lightshow Generator Macros</h3>
             <div class="flex-row">
                 <div><label>Color (MIDI 0-127)</label><input type="number" id="colorVal" value="45" min="0" max="127"></div>
                 <div>
@@ -90,10 +100,11 @@
             <select id="chain" onchange="updateGridVisuals()">
                 <option value="1">Chain 1</option><option value="2">Chain 2</option><option value="3">Chain 3</option>
             </select>
+            <button class="btn-auto" onclick="autoSliceBeats()">⚡ AUTO-CUT & MAP 8 BEATS</button>
             <div class="grid" id="launchpad"></div>
         </div>
 
-        <button class="btn-primary" onclick="exportPack()">💾 Export Professional UniPack</button>
+        <button class="btn-export" onclick="exportPack()">💾 Export Professional UniPack</button>
         <div id="status" style="text-align: center; margin-top: 10px; color: var(--accent); font-weight: bold;">Awaiting Audio...</div>
     </div>
 
@@ -115,13 +126,13 @@
         }
 
         document.getElementById('audioFile').addEventListener('change', async (e) => {
+            document.getElementById('status').innerText = "Loading Master Audio...";
             const file = e.target.files[0];
             masterBuffer = await audioContext.decodeAudioData(await file.arrayBuffer());
-            document.getElementById('status').innerText = "Audio Loaded.";
+            document.getElementById('status').innerText = "Audio Ready. Set cuts and map to grid.";
             drawWaveform();
         });
 
-        // 1. WAVEFORM VISUALIZER
         function drawWaveform() {
             if (!masterBuffer) return;
             const canvas = document.getElementById('waveform');
@@ -132,7 +143,7 @@
             const step = Math.ceil(masterBuffer.sampleRate * (endSec - startSec) / canvas.width) || 1;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#ff0055";
+            ctx.fillStyle = "#00ff88";
             let offset = Math.floor(startSec * masterBuffer.sampleRate);
             
             for (let i = 0; i < canvas.width; i++) {
@@ -146,18 +157,29 @@
                 ctx.fillRect(i, y, 1, h);
             }
             
-            // 10. BPM Analyzer
             const durationSec = endSec - startSec;
             if(durationSec > 0) document.getElementById('bpmDisplay').innerText = `Est. BPM: ${Math.round(60 / durationSec)}`;
         }
 
-        // AUDIO RENDERING ENGINE (FX, Pitch, Fade, Gain, Reverse)
+        async function applyEQ(buffer, filterType) {
+            if (filterType === 'none') return buffer;
+            const offlineCtx = new OfflineAudioContext(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+            const source = offlineCtx.createBufferSource(); source.buffer = buffer;
+            const filter = offlineCtx.createBiquadFilter();
+            if (filterType === 'bass') { filter.type = 'lowpass'; filter.frequency.value = 150; } 
+            else if (filterType === 'vocal') { filter.type = 'bandpass'; filter.frequency.value = 1000; filter.Q.value = 1.0; } 
+            else if (filterType === 'drums') { filter.type = 'highpass'; filter.frequency.value = 2000; }
+            source.connect(filter); filter.connect(offlineCtx.destination); source.start(0);
+            return await offlineCtx.startRendering();
+        }
+
         async function renderAudioSlice() {
             const startSec = parseFloat(document.getElementById('startTime').value) / 1000;
             const endSec = parseFloat(document.getElementById('endTime').value) / 1000;
             const pitch = parseFloat(document.getElementById('pitch').value);
             const volume = parseFloat(document.getElementById('gain').value);
             const echoTime = parseFloat(document.getElementById('echo').value);
+            const filterType = document.getElementById('eqFilter').value;
             const isReverse = document.getElementById('reverse').checked;
             const isNormalize = document.getElementById('normalize').checked;
             const fadeInSec = parseFloat(document.getElementById('fadeIn').value) / 1000;
@@ -167,7 +189,6 @@
             let length = Math.floor((endSec - startSec) * sr);
             if (length <= 0) return null;
 
-            // Extract & Reverse & Fade & Normalize
             let sliceBuffer = audioContext.createBuffer(masterBuffer.numberOfChannels, length, sr);
             let maxAmp = 0;
             
@@ -175,9 +196,7 @@
                 let chanData = sliceBuffer.getChannelData(i);
                 chanData.set(masterBuffer.getChannelData(i).subarray(Math.floor(startSec * sr), Math.floor(endSec * sr)));
                 if (isReverse) chanData.reverse();
-                
                 for(let j=0; j<length; j++) {
-                    // Fades
                     let multiplier = 1.0;
                     if (j < fadeInSec * sr) multiplier = j / (fadeInSec * sr);
                     else if (j > length - (fadeOutSec * sr)) multiplier = (length - j) / (fadeOutSec * sr);
@@ -194,28 +213,21 @@
                 }
             }
 
-            // Apply Pitch, Gain, and Echo via OfflineAudioContext
+            const eqBuffer = await applyEQ(sliceBuffer, filterType);
             const renderLen = (length / pitch) + (echoTime > 0 ? sr * 2 : 0); 
-            const offlineCtx = new OfflineAudioContext(sliceBuffer.numberOfChannels, renderLen, sr);
+            const offlineCtx = new OfflineAudioContext(eqBuffer.numberOfChannels, renderLen, sr);
             
             const source = offlineCtx.createBufferSource();
-            source.buffer = sliceBuffer;
+            source.buffer = eqBuffer;
             source.playbackRate.value = pitch;
 
-            const gainNode = offlineCtx.createGain();
-            gainNode.gain.value = volume;
-
+            const gainNode = offlineCtx.createGain(); gainNode.gain.value = volume;
             source.connect(gainNode);
 
             if (echoTime > 0) {
-                const delayNode = offlineCtx.createDelay();
-                delayNode.delayTime.value = echoTime;
-                const feedback = offlineCtx.createGain();
-                feedback.gain.value = 0.4;
-                gainNode.connect(delayNode);
-                delayNode.connect(feedback);
-                feedback.connect(delayNode);
-                delayNode.connect(offlineCtx.destination);
+                const delayNode = offlineCtx.createDelay(); delayNode.delayTime.value = echoTime;
+                const feedback = offlineCtx.createGain(); feedback.gain.value = 0.4;
+                gainNode.connect(delayNode); delayNode.connect(feedback); feedback.connect(delayNode); delayNode.connect(offlineCtx.destination);
             }
 
             gainNode.connect(offlineCtx.destination);
@@ -224,7 +236,7 @@
         }
 
         async function playPreview(loop) {
-            if (!masterBuffer) return;
+            if (!masterBuffer) return alert("Load Audio First!");
             stopPreview();
             const renderedBuffer = await renderAudioSlice();
             previewSource = audioContext.createBufferSource();
@@ -234,9 +246,7 @@
             previewSource.start(0);
         }
 
-        function stopPreview() {
-            if (previewSource) { previewSource.stop(); previewSource = null; }
-        }
+        function stopPreview() { if (previewSource) { previewSource.stop(); previewSource = null; } }
 
         function updateGridVisuals() {
             const chain = document.getElementById('chain').value;
@@ -255,8 +265,7 @@
                 stopPreview();
                 previewSource = audioContext.createBufferSource();
                 previewSource.buffer = existingSound.rawBuffer; 
-                previewSource.connect(audioContext.destination); 
-                previewSource.start(0);
+                previewSource.connect(audioContext.destination); previewSource.start(0);
                 return;
             }
 
@@ -280,25 +289,51 @@
             document.getElementById('status').innerText = `Mapped to Chain ${chain}, Pad [${x},${y}]`;
         }
 
-        // CORRECT NATIVE MIDI LIGHTSHOW ENGINE
-        function generateLightshow(theme, x, y, color, duration) {
+        async function autoSliceBeats() {
+            if (!masterBuffer) return alert("Load audio first!");
+            document.getElementById('status').innerText = "Analyzing Transients...";
+            const data = masterBuffer.getChannelData(0); const sr = masterBuffer.sampleRate;
+            const beats = []; const minGap = sr * 0.25; const threshold = 0.5; let lastBeat = -minGap;
+            const scanLimit = Math.min(data.length, sr * 30); 
+            
+            for(let i = 0; i < scanLimit; i++) {
+                if (Math.abs(data[i]) > threshold && (i - lastBeat) > minGap) {
+                    beats.push(Math.floor((i / sr) * 1000)); lastBeat = i;
+                    if(beats.length >= 8) break; 
+                }
+            }
+            if(beats.length === 0) return alert("No beats detected.");
+            
+            const chain = document.getElementById('chain').value;
+            for(let i=0; i < beats.length; i++) {
+                document.getElementById('startTime').value = beats[i];
+                document.getElementById('endTime').value = beats[i] + 400; // 400ms chop
+                const finalBuffer = await renderAudioSlice();
+                sounds.push({
+                    id: sounds.length + 1, chain, x: i+1, y: 1, durationMs: 400, 
+                    baseColor: document.getElementById('colorVal').value, theme: document.getElementById('lightTheme').value, 
+                    rawBuffer: finalBuffer, wavBlob: encodeRIFF(finalBuffer), filename: `${(sounds.length + 1).toString().padStart(3, '0')}.wav`
+                });
+            }
+            updateGridVisuals();
+            document.getElementById('status').innerText = `⚡ Auto-Sliced 8 beats perfectly horizontally!`;
+        }
+
+        // CORRECT NATIVE UNIPAD LIGHTSHOW ENGINE & AXIS FIX
+        function generateLightshow(theme, upX, upY, color, durationMs) {
             let ledStr = `d 0\n`; 
-            let offStr = `d ${Math.floor(duration)}\n`;
+            let offStr = `d ${Math.floor(durationMs)}\n`;
             
-            // Note Calculation: Top-Left (x=1,y=1) is 81. Bottom-Right (x=8,y=8) is 18.
-            const getNote = (cx, cy) => (9 - parseInt(cy)) * 10 + parseInt(cx);
-            
-            const turnOn = (cx, cy) => {
-                if(cx>=1 && cx<=8 && cy>=1 && cy<=8) {
-                    const note = getNote(cx, cy);
-                    ledStr += `o 144 ${note} ${color}\n`;
-                    offStr += `o 144 ${note} 0\n`;
+            const turnOn = (r, c, colr) => {
+                if(r>=1 && r<=8 && c>=1 && c<=8) {
+                    ledStr += `o ${r} ${c} a ${colr}\n`;
+                    offStr += `f ${r} ${c}\n`;
                 }
             };
 
-            if (theme === "single") { turnOn(x, y); } 
+            if (theme === "single") { turnOn(upX, upY, color); } 
             else if (theme === "cross") {
-                for(let i=1; i<=8; i++) { turnOn(x, i); turnOn(i, y); }
+                for(let i=1; i<=8; i++) { turnOn(upX, i, color); if (i !== upX) turnOn(i, upY, color); }
             } 
             else if (theme === "ripple") {
                 let delay = 0;
@@ -306,10 +341,9 @@
                     ledStr += `d ${delay}\n`;
                     for(let r=1; r<=8; r++) {
                         for(let c=1; c<=8; c++) {
-                            if (Math.max(Math.abs(c - x), Math.abs(r - y)) === radius) {
-                                const note = getNote(c, r);
-                                ledStr += `o 144 ${note} ${color}\n`; 
-                                offStr += `o 144 ${note} 0\n`;
+                            if (Math.max(Math.abs(r - upX), Math.abs(c - upY)) === radius) {
+                                ledStr += `o ${r} ${c} a ${color}\n`;
+                                offStr += `f ${r} ${c}\n`;
                             }
                         }
                     }
@@ -321,12 +355,9 @@
                 for(let step=0; step<8; step++) {
                     ledStr += `d ${delay}\n`;
                     for(let i=0; i<4; i++) {
-                        let rx = Math.floor(Math.random() * 8) + 1;
-                        let ry = Math.floor(Math.random() * 8) + 1;
+                        let rx = Math.floor(Math.random() * 8) + 1; let ry = Math.floor(Math.random() * 8) + 1;
                         let rCol = Math.floor(Math.random() * 127);
-                        const note = getNote(rx, ry);
-                        ledStr += `o 144 ${note} ${rCol}\n`;
-                        offStr += `o 144 ${note} 0\n`;
+                        ledStr += `o ${rx} ${ry} a ${rCol}\n`; offStr += `f ${rx} ${ry}\n`;
                     }
                     delay += 60;
                 }
@@ -358,18 +389,26 @@
             document.getElementById('status').innerText = "Compiling Pro Archive...";
             
             const zip = new JSZip();
-            let keySound = "";
-            zip.file("info", `title=${packTitle}\nproducerName=${producerName}\nbuttonX=8\nbuttonY=8\nchain=8`);
+            // Prefixing with \n to safely bypass Unipad's strict first-line parser bugs
+            let keySound = "\n";
+            zip.file("info", `\ntitle=${packTitle}\nproducerName=${producerName}\nbuttonX=8\nbuttonY=8\nchain=8`);
+            zip.file("autoPlay", "\n");
+            
             const soundsFolder = zip.folder("sounds"); const keyLedFolder = zip.folder("keyLED");
 
             sounds.forEach(s => {
                 soundsFolder.file(s.filename, s.wavBlob);
                 
-                // Axis fixed back to standard mapping
-                keySound += `${s.chain} ${s.x} ${s.y} ${s.filename}\n`;
+                // UNIPAD NATIVE AXIS MAPPING
+                // UI 'y' (row) maps to Unipad 'x' (vertical coordinate)
+                // UI 'x' (col) maps to Unipad 'y' (horizontal coordinate)
+                let unipadX = s.y; 
+                let unipadY = s.x; 
+
+                keySound += `${s.chain} ${unipadX} ${unipadY} ${s.filename}\n`;
                 
-                let ledData = generateLightshow(s.theme, s.x, s.y, s.baseColor, s.durationMs);
-                keyLedFolder.file(`${s.chain} ${s.x} ${s.y} 1`, ledData); 
+                let ledData = "\n" + generateLightshow(s.theme, unipadX, unipadY, s.baseColor, s.durationMs);
+                keyLedFolder.file(`${s.chain} ${unipadX} ${unipadY} 1`, ledData); 
             });
 
             zip.file("keySound", keySound);
